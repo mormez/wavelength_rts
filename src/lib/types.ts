@@ -104,7 +104,7 @@ export const FOLLOW_UP_IN_OFFSETS: Record<FollowUpIn, number | null> = {
 };
 
 export const STATUS_COLORS: Record<ConversationStatus, string> = {
-  "New":                        "bg-yellow-50 border-l-4 border-l-yellow-400",
+  "New":                        "bg-green-50 border-l-4 border-l-green-400",
   "New Reply (Needs Response)": "bg-emerald-50 border-l-4 border-l-emerald-400",
   "Replied (Waiting on Them)":  "bg-blue-50 border-l-4 border-l-blue-400",
   "Ongoing Conversation":       "bg-violet-50 border-l-4 border-l-violet-400",
@@ -115,7 +115,7 @@ export const STATUS_COLORS: Record<ConversationStatus, string> = {
 };
 
 export const STATUS_BADGE_COLORS: Record<ConversationStatus, string> = {
-  "New":                        "bg-yellow-100 text-yellow-800",
+  "New":                        "bg-green-100 text-green-800",
   "New Reply (Needs Response)": "bg-emerald-100 text-emerald-800",
   "Replied (Waiting on Them)":  "bg-blue-100 text-blue-800",
   "Ongoing Conversation":       "bg-violet-100 text-violet-800",
