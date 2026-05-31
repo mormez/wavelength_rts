@@ -40,6 +40,7 @@ const emptyForm: FormData = {
   artist_band: "",
   contact_name: null,
   email: null,
+  management_email: null,
   genre: null,
   song_title: null,
   spotify_track_link: null,
@@ -68,6 +69,7 @@ export default function AddEditContactModal({ contact, onClose, onSaved }: Props
           artist_band: contact.artist_band,
           contact_name: contact.contact_name,
           email: contact.email,
+          management_email: contact.management_email,
           genre: contact.genre,
           song_title: contact.song_title,
           spotify_track_link: contact.spotify_track_link,
@@ -174,6 +176,9 @@ export default function AddEditContactModal({ contact, onClose, onSaved }: Props
               </Field>
               <Field label="Email">
                 <input type="email" value={form.email ?? ""} onChange={(e) => set("email", e.target.value)} placeholder="contact@example.com" className={INPUT} />
+              </Field>
+              <Field label="Management Email">
+                <input type="email" value={form.management_email ?? ""} onChange={(e) => set("management_email", e.target.value)} placeholder="manager@example.com" className={INPUT} />
               </Field>
               <Field label="Genre">
                 <input type="text" value={form.genre ?? ""} onChange={(e) => set("genre", e.target.value)} placeholder="e.g. Indie R&B" className={INPUT} />

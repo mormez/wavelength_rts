@@ -96,12 +96,8 @@ export async function POST(request: Request) {
       emailSource        = "carl_bcc";
       statusOverride     = "New";      // calendar link requested but not yet booked
       waitingOnOverride  = "Them";     // waiting on them to pick a time
-      if (notif.spotifyLink) extraFields.spotify_track_link = notif.spotifyLink;
-      // Note: managerEmail (notif.managerEmail) logged to console for now;
-      // add a manager_email field to the schema to persist it in Phase 6.
-      if (notif.managerEmail) {
-        console.info("[inbound-email] Manager email found:", notif.managerEmail);
-      }
+      if (notif.spotifyLink)   extraFields.spotify_track_link = notif.spotifyLink;
+      if (notif.managerEmail)  extraFields.management_email   = notif.managerEmail;
 
     } else if (isForwardedEmail) {
       // ── Forwarded email ──────────────────────────────────────────────────

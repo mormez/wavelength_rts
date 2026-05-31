@@ -51,6 +51,7 @@ export interface Contact {
   artist_band: string;
   contact_name: string | null;
   email: string | null;
+  management_email: string | null;
   genre: string | null;
   song_title: string | null;
   spotify_track_link: string | null;

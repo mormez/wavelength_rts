@@ -124,6 +124,7 @@ export default function ContactDetailPanel({ contact: initial, onClose, onUpdate
           <InlineText label="Artist / Band" value={contact.artist_band} onSave={(v) => save({ artist_band: v || contact.artist_band })} />
           <InlineText label="Contact Name" value={contact.contact_name} placeholder="Individual's name" onSave={(v) => save({ contact_name: v || null })} />
           <InlineText label="Email" value={contact.email} placeholder="contact@example.com" onSave={(v) => save({ email: v || null })} />
+          <InlineText label="Management Email" value={contact.management_email} placeholder="manager@example.com" onSave={(v) => save({ management_email: v || null })} />
           <InlineText label="Genre" value={contact.genre} placeholder="e.g. Indie R&B" onSave={(v) => save({ genre: v || null })} />
           <InlineText label="Location" value={contact.location} placeholder="City / region" onSave={(v) => save({ location: v || null })} />
           <InlineText label="Referral Source" value={contact.referral_source} placeholder="How they came in" onSave={(v) => save({ referral_source: v || null })} />

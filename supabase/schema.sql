@@ -44,6 +44,7 @@ create table if not exists public.contacts (
   artist_band             text not null,
   contact_name            text,
   email                   text,
+  management_email        text,
   genre                   text,
   song_title              text,
   spotify_track_link      text,
