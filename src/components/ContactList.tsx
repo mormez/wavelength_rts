@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import {
   Contact,
   ContactWithCalculated,
@@ -222,7 +223,7 @@ export default function ContactList({ initialContacts, username }: Props) {
         <div className={`min-w-0 ${panelOpen ? "hidden lg:block lg:flex-1" : "w-full"}`}>
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             {/* Column headers */}
-            <div className="grid grid-cols-[1fr_180px_90px_110px_100px] gap-0 px-4 py-2.5 bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-500 uppercase tracking-wide">
+            <div className="grid grid-cols-[1fr_180px_90px_110px_100px_90px] gap-0 px-4 py-2.5 bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-500 uppercase tracking-wide">
               <button className="text-left hover:text-gray-900 flex items-center" onClick={() => toggleSort("artist_band")}>
                 Artist / Band <SortIcon field="artist_band" />
               </button>
@@ -236,6 +237,7 @@ export default function ContactList({ initialContacts, username }: Props) {
               <button className="text-left hover:text-gray-900 flex items-center" onClick={() => toggleSort("last_contact_date")}>
                 Last Contact <SortIcon field="last_contact_date" />
               </button>
+              <span></span>
             </div>
 
             {sorted.length === 0 ? (
@@ -318,7 +320,7 @@ function ContactRow({
   return (
     <div
       onClick={onClick}
-      className={`grid grid-cols-[1fr_180px_90px_110px_100px] gap-0 px-4 py-3 cursor-pointer transition-colors ${statusClass} ${
+      className={`grid grid-cols-[1fr_180px_90px_110px_100px_90px] gap-0 px-4 py-3 cursor-pointer transition-colors ${statusClass} ${
         isSelected ? "ring-2 ring-inset ring-indigo-400" : "hover:brightness-95"
       } ${!isLast ? "border-b border-gray-100" : ""}`}
     >
@@ -370,6 +372,19 @@ function ContactRow({
 
       <div className="flex items-center">
         <span className="text-xs text-gray-500">{formatDate(contact.last_contact_date)}</span>
+      </div>
+
+      {/* Detail View button — hidden when the side panel is open for this row */}
+      <div className="flex items-center justify-end">
+        {!isSelected && (
+          <Link
+            href={`/contacts/${contact.id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="px-2.5 py-1 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-lg bg-white hover:bg-indigo-50 transition-colors whitespace-nowrap"
+          >
+            Detail View
+          </Link>
+        )}
       </div>
     </div>
   );

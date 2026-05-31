@@ -46,19 +46,13 @@ export default function AppShell({ children, userEmail, userName, username, plan
             <Link
               href="/contacts"
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                pathname === "/contacts"
+                pathname.startsWith("/contacts")
                   ? "bg-indigo-50 text-indigo-700"
                   : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
               }`}
             >
               Contacts
             </Link>
-            {/* Only shown when on a contact detail page */}
-            {pathname.startsWith("/contacts/") && (
-              <span className="px-3 py-1.5 rounded-lg text-sm font-medium bg-indigo-50 text-indigo-700">
-                Artist Detail View
-              </span>
-            )}
             <Link
               href="/settings"
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
