@@ -19,6 +19,7 @@ export default function SettingsClient({ email, fullName, username, plan }: Prop
   const [editingName, setEditingName] = useState(false);
   const [savingName, setSavingName] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
 
   const inboundAddress = `${username}@wavelength-rts.com`;
 
@@ -140,31 +141,44 @@ export default function SettingsClient({ email, fullName, username, plan }: Prop
 
             {/* How-to explanation */}
             <div className="space-y-1.5">
-              <p className="text-sm text-gray-600">
-                Forward or BCC emails to this address to automatically create and update contacts in Wavelength RTS.
-              </p>
-              <ul className="text-xs text-gray-500 space-y-1.5 pl-1">
-                <li className="flex items-start gap-1.5">
-                  <span className="text-indigo-400 mt-0.5">•</span>
-                  <span><strong>StudioLand &quot;New Calendar Link Requested&quot;:</strong> Forward this email — a new contact is created with status &quot;New&quot;, and the artist name, email, Spotify link, and management email are filled in automatically.</span>
-                </li>
-                <li className="flex items-start gap-1.5">
-                  <span className="text-indigo-400 mt-0.5">•</span>
-                  <span><strong>Carl loops you in:</strong> Carl BCCs this address when sending the intro email, or you forward it — a new contact is created with status &quot;New Reply (Needs Response)&quot;.</span>
-                </li>
-                <li className="flex items-start gap-1.5">
-                  <span className="text-indigo-400 mt-0.5">•</span>
-                  <span><strong>Your outgoing reply:</strong> BCC this address when replying to an artist — the contact&apos;s last interaction date updates and status is set to &quot;Replied (Waiting on Them)&quot;.</span>
-                </li>
-                <li className="flex items-start gap-1.5">
-                  <span className="text-indigo-400 mt-0.5">•</span>
-                  <span><strong>Incoming artist email:</strong> Forward any email you receive from an artist — logged as an incoming touchpoint and last contact date updates, without flipping the status to &quot;Replied&quot;.</span>
-                </li>
-                <li className="flex items-start gap-1.5">
-                  <span className="text-indigo-400 mt-0.5">•</span>
-                  <span><strong>Spotify links</strong> in any email body are extracted and saved to the contact automatically.</span>
-                </li>
-              </ul>
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm text-gray-600">
+                  BCC this address when replying to an artist, or forward an artist&apos;s email to it, to automatically log the interaction in Wavelength RTS.
+                </p>
+                <button
+                  onClick={() => setShowDetails(!showDetails)}
+                  className="shrink-0 p-1 rounded text-gray-400 hover:text-gray-600 transition-colors mt-0.5"
+                  title={showDetails ? "Hide details" : "Show details"}
+                >
+                  <svg
+                    className={`w-4 h-4 transition-transform ${showDetails ? "rotate-180" : ""}`}
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </div>
+
+              {showDetails && (
+                <ul className="text-xs text-gray-500 space-y-1.5 pl-1 pt-1">
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-indigo-400 mt-0.5">•</span>
+                    <span><strong>StudioLand &quot;New Calendar Link Requested&quot;:</strong> Forward this email — a new contact is created with status &quot;New&quot;, with artist name, email, and management email filled in automatically.</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-indigo-400 mt-0.5">•</span>
+                    <span><strong>Carl loops you in:</strong> Carl BCCs this address, or you forward his email — a new contact is created with status &quot;New Reply (Needs Response)&quot;.</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-indigo-400 mt-0.5">•</span>
+                    <span><strong>Your outgoing reply:</strong> BCC this address when replying — the contact&apos;s last interaction date updates and status is set to &quot;Replied (Waiting on Them)&quot;.</span>
+                  </li>
+                  <li className="flex items-start gap-1.5">
+                    <span className="text-indigo-400 mt-0.5">•</span>
+                    <span><strong>Incoming artist email:</strong> Forward any email from an artist — logged as an incoming touchpoint without flipping the status to &quot;Replied&quot;.</span>
+                  </li>
+                </ul>
+              )}
             </div>
           </div>
         </Card>
