@@ -3,6 +3,9 @@ import {
   parseEmailAddress,
   parseAddressList,
   isInboundAddress,
+  isForward,
+  hasForwardMarker,
+  extractForwardedSender,
   extractSpotifyLink,
   extractTemplateFields,
   nameSimilarity,
@@ -58,25 +61,47 @@ export async function POST(request: Request) {
       return new Response("User not found", { status: 404 });
     }
 
-    // ── 3. Detect scenario ─────────────────────────────────────────────────
-    // Scenario B: the sender IS the user (they BCC'd their own inbound address
-    //             while replying to an artist).
+    // ── 3. Detect scenario and whether this is a forwarded email ──────────
+    // Scenario B: the sender IS the user (BCC'd their own inbound address).
     // Scenario A: the sender is someone else (e.g. Carl), looping the user in.
+    // Forward:    subject starts with Fwd:/FW: or body has a forward marker.
+    //             Artist is the original sender buried in the quoted body —
+    //             NOT the To header (which just contains the inbound address).
     const sender = parseEmailAddress(rawFrom);
     const isScenarioB =
       !!profile.email &&
       sender.email.toLowerCase() === profile.email.toLowerCase();
-    const emailSource = isScenarioB ? "user_bcc" : "carl_bcc";
+    const isForwardedEmail = isForward(subject) || hasForwardMarker(textBody);
+
+    // Forwards are always treated as incoming artist emails (like carl_bcc)
+    // regardless of who did the forwarding.
+    const emailSource = isForwardedEmail
+      ? "carl_bcc"
+      : isScenarioB
+      ? "user_bcc"
+      : "carl_bcc";
 
     // ── 4. Find the artist ─────────────────────────────────────────────────
-    // In both scenarios the artist is the primary recipient in the email's
-    // To header. We strip any @wavelength-rts.com address that might appear.
-    const toAddresses  = parseAddressList(rawTo).filter(a => !isInboundAddress(a.email));
-    const ccAddresses  = parseAddressList(rawCc).filter(a => !isInboundAddress(a.email));
-    const artistAddr   = toAddresses[0] ?? ccAddresses[0];
+    let artistAddr: ReturnType<typeof parseEmailAddress> | undefined;
+
+    if (isForwardedEmail) {
+      // For forwards the To header is just the inbound address — the real
+      // artist is the original sender quoted in the body.
+      // Try plain text first (more reliable), fall back to HTML.
+      artistAddr =
+        extractForwardedSender(textBody) ??
+        extractForwardedSender(htmlBody) ??
+        undefined;
+    } else {
+      // Normal BCC: artist is the primary To address (excluding inbound).
+      const toAddresses = parseAddressList(rawTo).filter(a => !isInboundAddress(a.email));
+      const ccAddresses = parseAddressList(rawCc).filter(a => !isInboundAddress(a.email));
+      artistAddr = toAddresses[0] ?? ccAddresses[0];
+    }
 
     if (!artistAddr?.email) {
-      console.warn("[inbound-email] Could not identify artist address", { rawTo, rawCc });
+      console.warn("[inbound-email] Could not identify artist address",
+        { rawTo, rawCc, isForwardedEmail, subject });
       return new Response("Artist not identifiable", { status: 422 });
     }
 
@@ -110,7 +135,9 @@ export async function POST(request: Request) {
       for (const [key, val] of Object.entries(templateFields)) {
         if (val) updates[key] = val;
       }
-      if (isScenarioB) {
+      // Only update status for a user BCC (their outgoing reply).
+      // Forwards are incoming from the artist — don't flip status.
+      if (isScenarioB && !isForwardedEmail) {
         updates.conversation_status = "Replied (Waiting on Them)";
         updates.waiting_on = "Them";
       }
@@ -173,10 +200,11 @@ export async function POST(request: Request) {
       last_interaction_type: "Email",
       is_new: true,
       email_source: emailSource,
-      conversation_status: isScenarioB
+      // Forwards are always incoming from the artist, so treat like Scenario A.
+      conversation_status: isScenarioB && !isForwardedEmail
         ? "Replied (Waiting on Them)"
         : "New Reply (Needs Response)",
-      waiting_on: isScenarioB ? "Them" : "Me",
+      waiting_on: isScenarioB && !isForwardedEmail ? "Them" : "Me",
     };
 
     if (spotifyLink) newContact.spotify_track_link = spotifyLink;

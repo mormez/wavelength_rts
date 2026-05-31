@@ -56,6 +56,65 @@ export function isInboundAddress(email: string): boolean {
   return email.toLowerCase().endsWith("@wavelength-rts.com");
 }
 
+// ── Forward detection & extraction ────────────────────────────────────────
+
+/**
+ * True if the subject line indicates a forwarded message.
+ * Matches "Fwd:", "FW:", "Fw:" and variants with or without spaces.
+ */
+export function isForward(subject: string): boolean {
+  return /^\s*fw[d]?\s*:/i.test(subject);
+}
+
+/**
+ * True if the plain-text body contains a standard forward marker.
+ * Handles Gmail, Apple Mail, Outlook, and Yahoo formats.
+ */
+export function hasForwardMarker(body: string): boolean {
+  if (!body) return false;
+  return /(-{3,}|—{3,})\s*(forwarded|original)\s+message|begin\s+forwarded\s+message/i.test(body);
+}
+
+/**
+ * Extract the original sender from a forwarded email body.
+ *
+ * Handles the most common client formats:
+ *   Gmail:      "---------- Forwarded message ---------\nFrom: ..."
+ *   Apple Mail: "Begin forwarded message:\n\nFrom: ..."
+ *   Outlook:    "-----Original Message-----\nFrom: ..."
+ *   Yahoo:      "---- Forwarded Message ----\nFrom: ..."
+ *
+ * Falls back to the first bare "From: " line in the body if no marker
+ * is found (covers edge cases and non-standard clients).
+ *
+ * Returns null if no valid address can be extracted.
+ */
+export function extractForwardedSender(body: string): ParsedAddress | null {
+  if (!body) return null;
+
+  // Normalise line endings for consistent regex behaviour
+  const text = body.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+
+  // Find the start of the forwarded block so we don't match "From:" in the
+  // user's own reply text above the marker.
+  const markerPattern =
+    /(-{3,}|—{3,})\s*(forwarded|original)\s+message.*?\n|begin\s+forwarded\s+message\s*:\s*\n/i;
+  const markerMatch = text.match(markerPattern);
+  const searchText =
+    markerMatch?.index !== undefined
+      ? text.slice(markerMatch.index + markerMatch[0].length)
+      : text;
+
+  // Match "From: Name <email>" or "From: email"
+  // Allow optional leading ">" for quoted/indented lines
+  const fromMatch = searchText.match(/^>?\s*From:\s*(.+)$/im);
+  if (!fromMatch) return null;
+
+  const parsed = parseEmailAddress(fromMatch[1].trim());
+  // Discard if we couldn't extract a valid-looking email address
+  return parsed.email.includes("@") ? parsed : null;
+}
+
 // ── Content extraction ─────────────────────────────────────────────────────
 
 /**
