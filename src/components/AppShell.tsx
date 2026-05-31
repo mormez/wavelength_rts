@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
@@ -16,6 +16,7 @@ interface Props {
 export default function AppShell({ children, userEmail, userName, username, plan }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
   const supabase = createClient();
 
   async function handleSignOut() {
@@ -39,6 +40,30 @@ export default function AppShell({ children, userEmail, userName, username, plan
             <span className="font-bold text-gray-900 text-sm">Wavelength</span>
             <span className="text-xs text-gray-400 font-medium tracking-wide hidden sm:block">RTS</span>
           </div>
+
+          {/* Nav links */}
+          <nav className="flex items-center gap-1">
+            <Link
+              href="/contacts"
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                pathname.startsWith("/contacts")
+                  ? "bg-indigo-50 text-indigo-700"
+                  : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+              }`}
+            >
+              Contacts
+            </Link>
+            <Link
+              href="/settings"
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                pathname === "/settings"
+                  ? "bg-indigo-50 text-indigo-700"
+                  : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+              }`}
+            >
+              Settings
+            </Link>
+          </nav>
 
           {/* User menu */}
           <div className="relative">
