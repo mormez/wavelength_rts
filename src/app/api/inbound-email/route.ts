@@ -6,6 +6,8 @@ import {
   isForward,
   hasForwardMarker,
   extractForwardedSender,
+  isStudioLandCalendarNotification,
+  extractCalendarNotificationFields,
   extractSpotifyLink,
   extractTemplateFields,
   nameSimilarity,
@@ -61,47 +63,74 @@ export async function POST(request: Request) {
       return new Response("User not found", { status: 404 });
     }
 
-    // ── 3. Detect scenario and whether this is a forwarded email ──────────
-    // Scenario B: the sender IS the user (BCC'd their own inbound address).
-    // Scenario A: the sender is someone else (e.g. Carl), looping the user in.
-    // Forward:    subject starts with Fwd:/FW: or body has a forward marker.
-    //             Artist is the original sender buried in the quoted body —
-    //             NOT the To header (which just contains the inbound address).
-    const sender = parseEmailAddress(rawFrom);
-    const isScenarioB =
-      !!profile.email &&
+    // ── 3. Classify the email type ─────────────────────────────────────────
+    //
+    // Priority order:
+    //   1. StudioLand calendar notification — structured template, always
+    //      from carl@studiolandmgmt.co. Forwarded or sent directly.
+    //   2. Forward — subject Fwd:/FW: or body has a forward marker.
+    //      Artist is the original sender in the quoted block.
+    //   3. BCC — artist is in the To header. Scenario B if sender == user.
+    //
+    const sender       = parseEmailAddress(rawFrom);
+    const isUserSender = !!profile.email &&
       sender.email.toLowerCase() === profile.email.toLowerCase();
-    const isForwardedEmail = isForward(subject) || hasForwardMarker(textBody);
+    const isForwardedEmail     = isForward(subject) || hasForwardMarker(textBody);
+    const isCalendarNotif      = isStudioLandCalendarNotification(subject, textBody);
 
-    // Forwards are always treated as incoming artist emails (like carl_bcc)
-    // regardless of who did the forwarding.
-    const emailSource = isForwardedEmail
-      ? "carl_bcc"
-      : isScenarioB
-      ? "user_bcc"
-      : "carl_bcc";
-
-    // ── 4. Find the artist ─────────────────────────────────────────────────
+    // ── 4. Find the artist + set type-specific overrides ──────────────────
     let artistAddr: ReturnType<typeof parseEmailAddress> | undefined;
+    let emailSource             = isUserSender ? "user_bcc" : "carl_bcc";
+    let statusOverride: string | undefined;          // forces conversation_status
+    let waitingOnOverride: string | undefined;       // forces waiting_on
+    const extraFields: Record<string, unknown> = {}; // extra fields for contact row
 
-    if (isForwardedEmail) {
-      // For forwards the To header is just the inbound address — the real
-      // artist is the original sender quoted in the body.
-      // Try plain text first (more reliable), fall back to HTML.
+    if (isCalendarNotif) {
+      // ── StudioLand "New Calendar Link Requested" ─────────────────────────
+      // Structured template: extract name, email(s), and Spotify link from body.
+      // Status: Call Scheduled — the artist literally just booked a time.
+      const notif = extractCalendarNotificationFields(textBody);
+      if (notif.primaryEmail) {
+        artistAddr = { name: notif.artistName ?? "", email: notif.primaryEmail };
+      }
+      emailSource        = "carl_bcc";
+      statusOverride     = "Call Scheduled";
+      waitingOnOverride  = "Scheduled";
+      if (notif.spotifyLink) extraFields.spotify_track_link = notif.spotifyLink;
+      // Note: managerEmail (notif.managerEmail) logged to console for now;
+      // add a manager_email field to the schema to persist it in Phase 6.
+      if (notif.managerEmail) {
+        console.info("[inbound-email] Manager email found:", notif.managerEmail);
+      }
+
+    } else if (isForwardedEmail) {
+      // ── Forwarded email ──────────────────────────────────────────────────
+      // Artist is the original sender in the quoted body, not the To header
+      // (which is just the inbound address when someone hits Forward).
       artistAddr =
         extractForwardedSender(textBody) ??
         extractForwardedSender(htmlBody) ??
         undefined;
+      emailSource = "carl_bcc"; // incoming from artist, regardless of who forwarded
+
     } else {
-      // Normal BCC: artist is the primary To address (excluding inbound).
-      const toAddresses = parseAddressList(rawTo).filter(a => !isInboundAddress(a.email));
-      const ccAddresses = parseAddressList(rawCc).filter(a => !isInboundAddress(a.email));
-      artistAddr = toAddresses[0] ?? ccAddresses[0];
+      // ── Normal BCC (Scenario A or B) ─────────────────────────────────────
+      // Artist is the primary To address. Filter out:
+      //   - The inbound @wavelength-rts.com address
+      //   - The user's own email (Carl often includes Mor in the To line too)
+      const userEmail  = (profile.email ?? "").toLowerCase();
+      const toFiltered = parseAddressList(rawTo)
+        .filter(a => !isInboundAddress(a.email))
+        .filter(a => a.email !== userEmail);
+      const ccFiltered = parseAddressList(rawCc)
+        .filter(a => !isInboundAddress(a.email))
+        .filter(a => a.email !== userEmail);
+      artistAddr = toFiltered[0] ?? ccFiltered[0];
     }
 
     if (!artistAddr?.email) {
       console.warn("[inbound-email] Could not identify artist address",
-        { rawTo, rawCc, isForwardedEmail, subject });
+        { rawTo, rawCc, isForwardedEmail, isCalendarNotif, subject });
       return new Response("Artist not identifiable", { status: 422 });
     }
 
@@ -131,13 +160,20 @@ export async function POST(request: Request) {
       if (spotifyLink && !emailMatch.spotify_track_link) {
         updates.spotify_track_link = spotifyLink;
       }
+      // Apply any extra fields from template parsers (e.g. calendar notification)
+      for (const [key, val] of Object.entries(extraFields)) {
+        if (val && key !== "spotify_track_link") updates[key] = val; // Spotify handled above
+      }
       // Apply Phase 5 template fields (non-null values only)
       for (const [key, val] of Object.entries(templateFields)) {
         if (val) updates[key] = val;
       }
-      // Only update status for a user BCC (their outgoing reply).
-      // Forwards are incoming from the artist — don't flip status.
-      if (isScenarioB && !isForwardedEmail) {
+      // Apply type-specific status overrides, or default Scenario B behaviour
+      if (statusOverride) {
+        updates.conversation_status = statusOverride;
+        if (waitingOnOverride) updates.waiting_on = waitingOnOverride;
+      } else if (isUserSender && !isForwardedEmail) {
+        // User BCC'd their own outgoing reply
         updates.conversation_status = "Replied (Waiting on Them)";
         updates.waiting_on = "Them";
       }
@@ -200,14 +236,20 @@ export async function POST(request: Request) {
       last_interaction_type: "Email",
       is_new: true,
       email_source: emailSource,
-      // Forwards are always incoming from the artist, so treat like Scenario A.
-      conversation_status: isScenarioB && !isForwardedEmail
-        ? "Replied (Waiting on Them)"
-        : "New Reply (Needs Response)",
-      waiting_on: isScenarioB && !isForwardedEmail ? "Them" : "Me",
+      // Type-specific status, or Scenario B vs A default
+      conversation_status: statusOverride ??
+        (isUserSender && !isForwardedEmail
+          ? "Replied (Waiting on Them)"
+          : "New Reply (Needs Response)"),
+      waiting_on: waitingOnOverride ??
+        (isUserSender && !isForwardedEmail ? "Them" : "Me"),
     };
 
     if (spotifyLink) newContact.spotify_track_link = spotifyLink;
+    // Apply extra fields from template parsers
+    for (const [key, val] of Object.entries(extraFields)) {
+      if (val) newContact[key] = val;
+    }
     // Apply Phase 5 template fields
     for (const [key, val] of Object.entries(templateFields)) {
       if (val) newContact[key] = val;

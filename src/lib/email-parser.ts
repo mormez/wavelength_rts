@@ -165,6 +165,71 @@ export function nameSimilarity(a: string, b: string): number {
   return union === 0 ? 0 : intersection / union;
 }
 
+// ── StudioLand "New Calendar Link Requested" template ─────────────────────
+
+/**
+ * True if this email is a StudioLand "New Calendar Link Requested"
+ * notification. Detected by subject line or by the distinctive body phrase,
+ * so it works whether forwarded (subject gets "Fwd: " prefix) or sent directly.
+ */
+export function isStudioLandCalendarNotification(
+  subject: string,
+  body: string
+): boolean {
+  return (
+    /new calendar link requested/i.test(subject) ||
+    /just requested your calendar booking link/i.test(body)
+  );
+}
+
+/**
+ * Extract structured fields from a StudioLand "New Calendar Link Requested" email.
+ *
+ * Template structure (example):
+ *   "Sam Johnson just requested your calendar booking link."
+ *   "For reference, here is the song link:\n[Spotify URL]"
+ *   "As well as the contact info (there may be two...):\n[email1]\n[email2?]"
+ *   "You can listen to the song...:\n[Softr URL]"
+ *
+ * Returns the first email as the primary artist contact, second (if present)
+ * as a manager email. Spotify link re-uses the existing extractor.
+ */
+export function extractCalendarNotificationFields(body: string): {
+  artistName: string | null;
+  primaryEmail: string | null;
+  managerEmail: string | null;
+  spotifyLink: string | null;
+} {
+  // Artist name: everything before "just requested your calendar booking link"
+  const nameMatch = body.match(
+    /^([A-Za-z][^\n\r]{1,80}?)\s+just requested your calendar booking link/im
+  );
+  const artistName = nameMatch?.[1]?.trim() ?? null;
+
+  // Spotify link — re-use the existing extractor
+  const spotifyLink = extractSpotifyLink(body);
+
+  // Email addresses: find the block between the "contact info" sentence and
+  // the "Softr dashboard" sentence, then pull out bare email addresses.
+  const contactBlock = body.match(
+    /there may be two if we have both[^\n\r]*[\r\n]+([\s\S]*?)(?:you can listen|https?:\/\/[^\s]*softr)/i
+  );
+  const emails: string[] = [];
+  if (contactBlock?.[1]) {
+    const found = contactBlock[1].match(
+      /[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g
+    );
+    if (found) emails.push(...found.map((e) => e.toLowerCase()));
+  }
+
+  return {
+    artistName,
+    primaryEmail: emails[0] ?? null,
+    managerEmail: emails[1] ?? null,
+    spotifyLink,
+  };
+}
+
 // ── Carl's template fields (Phase 5) ──────────────────────────────────────
 // Add one function per field. Each function receives the plain-text body
 // and returns the extracted value or null. The webhook calls them all.
