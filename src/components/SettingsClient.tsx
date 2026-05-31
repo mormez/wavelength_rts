@@ -50,9 +50,19 @@ export default function SettingsClient({ email, fullName, username, plan }: Prop
   return (
     <div className="max-w-2xl">
       {/* Page header */}
-      <div className="mb-6">
-        <h1 className="text-xl font-bold text-gray-900">Settings</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Manage your account and inbound email address</p>
+      <div className="flex items-center gap-3 mb-6">
+        <button
+          onClick={() => router.push("/contacts")}
+          className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Settings</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Manage your account and inbound email address</p>
+        </div>
       </div>
 
       <div className="space-y-5">
