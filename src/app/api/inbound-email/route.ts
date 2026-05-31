@@ -52,14 +52,16 @@ export async function POST(request: Request) {
 
     const supabase = createAdminClient();
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from("user_profiles")
       .select("id, email, username")
       .eq("username", username)
       .single();
 
     if (!profile) {
-      console.warn("[inbound-email] Unknown username:", username);
+      console.warn("[inbound-email] Unknown username:", username,
+        "| Supabase error code:", profileError?.code,
+        "| message:", profileError?.message);
       return new Response("User not found", { status: 404 });
     }
 
