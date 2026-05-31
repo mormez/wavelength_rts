@@ -85,10 +85,7 @@ export default function AppShell({ children, userEmail, userName, username, plan
                 <div className="px-4 py-3 border-b border-gray-100">
                   <p className="text-sm font-medium text-gray-900">{userName}</p>
                   <p className="text-xs text-gray-500 truncate">{userEmail}</p>
-                  <div className="mt-2 flex items-center gap-1.5">
-                    <span className="text-xs text-gray-500 font-mono">{username}@wavelength-rts.com</span>
-                  </div>
-                  <span className="mt-1 inline-block text-xs bg-gray-100 text-gray-600 rounded px-1.5 py-0.5">Subscription type: <span className="capitalize">{plan}</span></span>
+                  <span className="mt-2 inline-block text-xs bg-gray-100 text-gray-600 rounded px-1.5 py-0.5">Subscription type: <span className="capitalize">{plan}</span></span>
                 </div>
                 <Link
                   href="/settings"
