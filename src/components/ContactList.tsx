@@ -125,9 +125,8 @@ export default function ContactList({ initialContacts, username }: Props) {
       {username && (
         <div className="mb-5 flex items-center justify-between gap-4 bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3">
           <div className="min-w-0">
-            <p className="text-xs text-indigo-600 font-medium mb-0.5">Your inbound address</p>
+            <p className="text-xs text-indigo-600 font-medium mb-0.5">Your inbound address <span className="font-normal">(BCC or forward to this address to automatically add a contact.)</span></p>
             <p className="text-sm font-mono text-indigo-900 truncate">{inboundAddress}</p>
-            <p className="text-xs text-indigo-500 mt-0.5">BCC or forward to this address to automatically add a contact.</p>
           </div>
           <button
             onClick={copyAddress}
