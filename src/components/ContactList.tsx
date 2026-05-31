@@ -147,7 +147,7 @@ export default function ContactList({ initialContacts, username }: Props) {
               </>
             )}
           </button>
-          <Link href="/settings" className="shrink-0 text-xs text-gray-400 hover:text-indigo-600 transition-colors ml-auto">
+          <Link href="/settings" className="shrink-0 text-xs text-gray-400 hover:text-indigo-600 transition-colors">
             More details →
           </Link>
         </div>
