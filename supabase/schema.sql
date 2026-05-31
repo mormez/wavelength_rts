@@ -52,6 +52,7 @@ create table if not exists public.contacts (
 
   -- Relationship status
   conversation_status     text check (conversation_status in (
+    'New',
     'New Reply (Needs Response)',
     'Replied (Waiting on Them)',
     'Ongoing Conversation',

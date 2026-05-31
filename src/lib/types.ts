@@ -1,4 +1,5 @@
 export type ConversationStatus =
+  | "New"
   | "New Reply (Needs Response)"
   | "Replied (Waiting on Them)"
   | "Ongoing Conversation"
@@ -12,6 +13,7 @@ export type WaitingOn = "Me" | "Them" | "Scheduled" | "None";
 // Auto-derives "Waiting On" from "Conversation Status".
 // Applied automatically when status changes; user can override manually.
 export const STATUS_TO_WAITING_ON: Record<ConversationStatus, WaitingOn> = {
+  "New":                        "None",
   "New Reply (Needs Response)": "Me",
   "Replied (Waiting on Them)":  "Them",
   "Ongoing Conversation":       "None",
@@ -102,21 +104,23 @@ export const FOLLOW_UP_IN_OFFSETS: Record<FollowUpIn, number | null> = {
 };
 
 export const STATUS_COLORS: Record<ConversationStatus, string> = {
+  "New":                        "bg-yellow-50 border-l-4 border-l-yellow-400",
   "New Reply (Needs Response)": "bg-emerald-50 border-l-4 border-l-emerald-400",
-  "Replied (Waiting on Them)": "bg-blue-50 border-l-4 border-l-blue-400",
-  "Ongoing Conversation": "bg-violet-50 border-l-4 border-l-violet-400",
-  "Call Scheduled": "bg-amber-50 border-l-4 border-l-amber-400",
-  "Had Call": "bg-sky-50 border-l-4 border-l-sky-400",
-  "Follow-Up Needed": "bg-orange-50 border-l-4 border-l-orange-400",
-  Inactive: "bg-gray-50 border-l-4 border-l-gray-300",
+  "Replied (Waiting on Them)":  "bg-blue-50 border-l-4 border-l-blue-400",
+  "Ongoing Conversation":       "bg-violet-50 border-l-4 border-l-violet-400",
+  "Call Scheduled":             "bg-amber-50 border-l-4 border-l-amber-400",
+  "Had Call":                   "bg-sky-50 border-l-4 border-l-sky-400",
+  "Follow-Up Needed":           "bg-orange-50 border-l-4 border-l-orange-400",
+  "Inactive":                   "bg-gray-50 border-l-4 border-l-gray-300",
 };
 
 export const STATUS_BADGE_COLORS: Record<ConversationStatus, string> = {
+  "New":                        "bg-yellow-100 text-yellow-800",
   "New Reply (Needs Response)": "bg-emerald-100 text-emerald-800",
-  "Replied (Waiting on Them)": "bg-blue-100 text-blue-800",
-  "Ongoing Conversation": "bg-violet-100 text-violet-800",
-  "Call Scheduled": "bg-amber-100 text-amber-800",
-  "Had Call": "bg-sky-100 text-sky-800",
-  "Follow-Up Needed": "bg-orange-100 text-orange-800",
-  Inactive: "bg-gray-100 text-gray-600",
+  "Replied (Waiting on Them)":  "bg-blue-100 text-blue-800",
+  "Ongoing Conversation":       "bg-violet-100 text-violet-800",
+  "Call Scheduled":             "bg-amber-100 text-amber-800",
+  "Had Call":                   "bg-sky-100 text-sky-800",
+  "Follow-Up Needed":           "bg-orange-100 text-orange-800",
+  "Inactive":                   "bg-gray-100 text-gray-600",
 };

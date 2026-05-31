@@ -15,6 +15,7 @@ import { computeCalculatedFields, daysUntilBgColor, formatDate } from "@/lib/uti
 import { Section, InlineText, InlineDate, InlineSelect, ReadOnlyRow, NoteField } from "./ContactFields";
 
 const CONVERSATION_STATUSES = [
+  "New",
   "New Reply (Needs Response)",
   "Replied (Waiting on Them)",
   "Ongoing Conversation",

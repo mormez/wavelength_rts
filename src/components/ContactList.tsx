@@ -107,6 +107,7 @@ export default function ContactList({ initialContacts, username }: Props) {
   };
 
   const statuses: ConversationStatus[] = [
+    "New",
     "New Reply (Needs Response)",
     "Replied (Waiting on Them)",
     "Ongoing Conversation",

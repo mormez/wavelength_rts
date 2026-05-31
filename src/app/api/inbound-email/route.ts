@@ -94,8 +94,8 @@ export async function POST(request: Request) {
         artistAddr = { name: notif.artistName ?? "", email: notif.primaryEmail };
       }
       emailSource        = "carl_bcc";
-      statusOverride     = "Call Scheduled";
-      waitingOnOverride  = "Scheduled";
+      statusOverride     = "New";      // calendar link requested but not yet booked
+      waitingOnOverride  = "Them";     // waiting on them to pick a time
       if (notif.spotifyLink) extraFields.spotify_track_link = notif.spotifyLink;
       // Note: managerEmail (notif.managerEmail) logged to console for now;
       // add a manager_email field to the schema to persist it in Phase 6.

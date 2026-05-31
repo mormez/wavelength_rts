@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Contact } from "@/lib/types";
 
 const CONVERSATION_STATUSES = [
+  "New",
   "New Reply (Needs Response)",
   "Replied (Waiting on Them)",
   "Ongoing Conversation",
