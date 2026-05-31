@@ -122,33 +122,34 @@ export default function ContactList({ initialContacts, username }: Props) {
 
   return (
     <div>
-      {/* Inbound address banner */}
+      {/* Inbound address — subtle strip */}
       {username && (
-        <div className="mb-5 flex items-center justify-between gap-4 bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-3">
-          <div className="min-w-0">
-            <p className="text-xs text-indigo-600 font-medium mb-0.5">Your inbound address <span className="font-normal">(BCC or forward to this address to automatically add a contact.)</span></p>
-            <p className="text-sm font-mono text-indigo-900 truncate">{inboundAddress}</p>
-          </div>
+        <div className="mb-5 flex items-center gap-3 px-1 pb-4 border-b border-gray-200">
+          <span className="text-xs text-gray-400 shrink-0">Inbound email</span>
+          <span className="text-xs font-mono text-gray-500 truncate">{inboundAddress}</span>
           <button
             onClick={copyAddress}
-            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-white border border-indigo-200 rounded-lg text-xs font-medium text-indigo-700 hover:bg-indigo-50 transition-colors"
+            className="shrink-0 flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors"
           >
             {copied ? (
               <>
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                Copied!
+                Copied
               </>
             ) : (
               <>
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
                 Copy
               </>
             )}
           </button>
+          <Link href="/settings" className="shrink-0 text-xs text-gray-400 hover:text-indigo-600 transition-colors ml-auto">
+            More details →
+          </Link>
         </div>
       )}
 
