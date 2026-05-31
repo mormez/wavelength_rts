@@ -1,0 +1,85 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+
+interface Props {
+  children: React.ReactNode;
+  userEmail: string;
+  userName: string;
+  username: string;
+  plan: string;
+}
+
+export default function AppShell({ children, userEmail, userName, username, plan }: Props) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const router = useRouter();
+  const supabase = createClient();
+
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    router.push("/login");
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Top nav */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+              </svg>
+            </div>
+            <span className="font-bold text-gray-900 text-sm">Wavelength</span>
+            <span className="text-xs text-gray-400 font-medium tracking-wide hidden sm:block">RTS</span>
+          </div>
+
+          {/* User menu */}
+          <div className="relative">
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 text-xs font-semibold">
+                {userName.charAt(0).toUpperCase()}
+              </div>
+              <span className="text-sm text-gray-700 hidden sm:block">{userName}</span>
+              <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {menuOpen && (
+              <div className="absolute right-0 mt-1 w-64 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50">
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <p className="text-sm font-medium text-gray-900">{userName}</p>
+                  <p className="text-xs text-gray-500 truncate">{userEmail}</p>
+                  <div className="mt-2 flex items-center gap-1.5">
+                    <span className="text-xs text-gray-500 font-mono">{username}@wavelength-rts.com</span>
+                  </div>
+                  <span className="mt-1 inline-block text-xs bg-gray-100 text-gray-600 rounded px-1.5 py-0.5">Subscription type: <span className="capitalize">{plan}</span></span>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Sign out
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Page content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+        {children}
+      </main>
+    </div>
+  );
+}
