@@ -141,23 +141,21 @@ export default function SettingsClient({ email, fullName, username, plan }: Prop
 
             {/* How-to explanation */}
             <div className="space-y-1.5">
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-sm text-gray-600">
-                  BCC this address when replying to an artist, or forward an artist&apos;s email to it, to automatically log the interaction in Wavelength RTS.
-                </p>
-                <button
-                  onClick={() => setShowDetails(!showDetails)}
-                  className="shrink-0 p-1 rounded text-gray-400 hover:text-gray-600 transition-colors mt-0.5"
-                  title={showDetails ? "Hide details" : "Show details"}
+              <p className="text-sm text-gray-600">
+                BCC this address when replying to an artist, or forward an artist&apos;s email to it, to automatically log the interaction in Wavelength RTS.
+              </p>
+              <button
+                onClick={() => setShowDetails(!showDetails)}
+                className="flex items-center gap-1 text-xs text-indigo-500 hover:text-indigo-700 transition-colors"
+              >
+                <span>More details</span>
+                <svg
+                  className={`w-3.5 h-3.5 transition-transform ${showDetails ? "rotate-180" : ""}`}
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor"
                 >
-                  <svg
-                    className={`w-4 h-4 transition-transform ${showDetails ? "rotate-180" : ""}`}
-                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-              </div>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
 
               {showDetails && (
                 <ul className="text-xs text-gray-500 space-y-1.5 pl-1 pt-1">
