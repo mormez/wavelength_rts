@@ -46,18 +46,35 @@ export function InlineText({
   }
 
   return (
-    <button
-      onClick={() => setEditing(true)}
-      className="w-full flex items-center justify-between px-3 py-2 gap-3 hover:bg-white transition-colors text-left group rounded-xl"
-    >
+    <div className="flex items-center px-3 py-2 gap-2 group hover:bg-white transition-colors rounded-xl">
       <span className="text-xs text-gray-500 shrink-0 w-32">{label}</span>
-      <span className={`text-sm flex-1 text-right truncate ${local ? (isLink ? "text-indigo-600" : "text-gray-900") : "text-gray-400"}`}>
-        {local || "—"}
-      </span>
-      <svg className="w-3 h-3 text-gray-300 group-hover:text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-      </svg>
-    </button>
+      <button
+        onClick={() => setEditing(true)}
+        className="flex-1 flex items-center justify-end gap-1.5 min-w-0 text-left"
+      >
+        <span className={`text-sm flex-1 text-right truncate ${local ? (isLink ? "text-indigo-600" : "text-gray-900") : "text-gray-400"}`}>
+          {local || "—"}
+        </span>
+        <svg className="w-3 h-3 text-gray-300 group-hover:text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+        </svg>
+      </button>
+      {/* Open-in-new-tab button — only shown for link fields that have a value */}
+      {isLink && local && (
+        <a
+          href={local}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          title="Open in new tab"
+          className="shrink-0 p-1 rounded text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </a>
+      )}
+    </div>
   );
 }
 
