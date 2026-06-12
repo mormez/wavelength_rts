@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 import {
   Contact,
   ContactWithCalculated,
@@ -38,6 +39,9 @@ export default function ContactList({ initialContacts, username }: Props) {
   const [showFilters, setShowFilters] = useState(false);
   const [copied, setCopied] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const inboundAddress = `${username}@wavelength-rts.com`;
   const selectedContact = selectedId ? contacts.find((c) => c.id === selectedId) ?? null : null;
@@ -100,6 +104,36 @@ export default function ContactList({ initialContacts, username }: Props) {
 
   function handleContactUpdated(contact: Contact) {
     setContacts((prev) => prev.map((c) => (c.id === contact.id ? contact : c)));
+  }
+
+  function toggleSelectRow(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    setSelectedIds((prev) => {
+      if (prev.size === sorted.length) return new Set();
+      return new Set(sorted.map((c) => c.id));
+    });
+  }
+
+  async function handleDeleteSelected() {
+    setDeleting(true);
+    const supabase = createClient();
+    const ids = Array.from(selectedIds);
+    const { error } = await supabase.from("contacts").delete().in("id", ids);
+    if (!error) {
+      setContacts((prev) => prev.filter((c) => !selectedIds.has(c.id)));
+      if (selectedId && selectedIds.has(selectedId)) setSelectedId(null);
+      setSelectedIds(new Set());
+    }
+    setDeleting(false);
+    setConfirmingDelete(false);
   }
 
   const SortIcon = ({ field }: { field: SortField }) => {
@@ -186,6 +220,29 @@ export default function ContactList({ initialContacts, username }: Props) {
         </div>
       </div>
 
+      {/* Bulk selection bar */}
+      {selectedIds.size > 0 && (
+        <div className="mb-4 flex items-center justify-between px-3 py-2 bg-indigo-50 border border-indigo-200 rounded-xl">
+          <span className="text-sm font-medium text-indigo-700">
+            {selectedIds.size} selected
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => setConfirmingDelete(true)}
+              className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Filters */}
       {showFilters && (
         <div className="mb-4 p-3 bg-white rounded-xl border border-gray-200">
@@ -224,7 +281,16 @@ export default function ContactList({ initialContacts, username }: Props) {
         <div className={`min-w-0 ${panelOpen ? "hidden lg:block lg:flex-1" : "w-full"}`}>
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             {/* Column headers */}
-            <div className="grid grid-cols-[1fr_180px_90px_110px_100px_90px] gap-0 px-4 py-2.5 bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-500 uppercase tracking-wide">
+            <div className="grid grid-cols-[40px_1fr_180px_90px_110px_100px_90px] gap-0 px-4 py-2.5 bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-500 uppercase tracking-wide">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={sorted.length > 0 && selectedIds.size === sorted.length}
+                  onChange={toggleSelectAll}
+                  className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  aria-label="Select all"
+                />
+              </div>
               <button className="text-left hover:text-gray-900 flex items-center" onClick={() => toggleSort("artist_band")}>
                 Artist / Band <SortIcon field="artist_band" />
               </button>
@@ -265,7 +331,9 @@ export default function ContactList({ initialContacts, username }: Props) {
                   contact={contact}
                   isLast={idx === sorted.length - 1}
                   isSelected={contact.id === selectedId}
+                  isChecked={selectedIds.has(contact.id)}
                   onClick={() => setSelectedId(contact.id === selectedId ? null : contact.id)}
+                  onToggleCheck={() => toggleSelectRow(contact.id)}
                 />
               ))
             )}
@@ -290,6 +358,35 @@ export default function ContactList({ initialContacts, username }: Props) {
           onSaved={handleContactSaved}
         />
       )}
+
+      {confirmingDelete && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <h2 className="text-lg font-bold text-gray-900">
+              Delete {selectedIds.size} contact{selectedIds.size === 1 ? "" : "s"}?
+            </h2>
+            <p className="text-sm text-gray-500 mt-2">
+              This can&apos;t be undone.
+            </p>
+            <div className="flex justify-end gap-2 mt-6">
+              <button
+                onClick={() => setConfirmingDelete(false)}
+                disabled={deleting}
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteSelected}
+                disabled={deleting}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {deleting ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -298,12 +395,16 @@ function ContactRow({
   contact,
   isLast,
   isSelected,
+  isChecked,
   onClick,
+  onToggleCheck,
 }: {
   contact: ContactWithCalculated;
   isLast: boolean;
   isSelected: boolean;
+  isChecked: boolean;
   onClick: () => void;
+  onToggleCheck: () => void;
 }) {
   const statusClass = contact.conversation_status
     ? STATUS_COLORS[contact.conversation_status]
@@ -321,10 +422,20 @@ function ContactRow({
   return (
     <div
       onClick={onClick}
-      className={`grid grid-cols-[1fr_180px_90px_110px_100px_90px] gap-0 px-4 py-3 cursor-pointer transition-colors ${statusClass} ${
+      className={`grid grid-cols-[40px_1fr_180px_90px_110px_100px_90px] gap-0 px-4 py-3 cursor-pointer transition-colors ${statusClass} ${
         isSelected ? "ring-2 ring-inset ring-indigo-400" : "hover:brightness-95"
       } ${!isLast ? "border-b border-gray-100" : ""}`}
     >
+      <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
+        <input
+          type="checkbox"
+          checked={isChecked}
+          onChange={onToggleCheck}
+          className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+          aria-label={`Select ${contact.artist_band}`}
+        />
+      </div>
+
       <div className="flex items-center gap-2 min-w-0">
         <span className="font-medium text-gray-900 text-sm truncate">{contact.artist_band}</span>
         {contact.is_new && (
